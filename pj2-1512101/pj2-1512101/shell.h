@@ -1,6 +1,10 @@
 #pragma once
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h> 
+#include <stdio.h>
+#include <tchar.h>
+#include <direct.h>
 
 static int const MAX_LEN = 100;
 #define args_buff_size 6;
@@ -9,7 +13,7 @@ static int const MAX_LEN = 100;
 char* read_line(void);
 char**split_line(char *line);
 int shell_execte(char **args);
-int function(int i);
+int function(int i, char**args);
 
 char *funct_str[] = {
 	"pwd",
@@ -33,9 +37,11 @@ void shell_loop(void) {
 	char *line;
 	char **args;
 	int stt;
-
+	//char *crt = new char[100];
 	do {
-		printf("> ");
+		char *crd = new char[100];
+		crd = _getcwd(NULL, 0);
+		printf("%s> ", crd);
 		line = read_line(); //read the command from user
 		args = split_line(line);
 		stt = shell_execte(args);
@@ -101,23 +107,31 @@ int shell_execte(char **args) {
 
 	for (int i = 0; i < shell_num_funct(); i++) {
 		if (strcmp(args[0], funct_str[i]) == 0) {
-			int j = function(i);
+			int j = function(i, args);
 			return 1;
 		}
 	}
 }
 
 int pwd() {
-	int i;
-	printf("Checking if processor is available...");
-	if (system(NULL)) puts("Ok");
-	else exit(EXIT_FAILURE);
-	i = system("chdir");
+	char *crd = new char[100];
+	crd = _getcwd(NULL, 0);
+	printf("Current working directory:\n	 %s \n", crd);
+	return 1;
 }
 
-int function(int i) {
+int cd(char**args) {
+	if (system(NULL)) puts("cd Ok");
+	else exit(EXIT_FAILURE);
+	system("cd");
+	
+	return 1;
+}
+
+int function(int i, char**args) {
 	switch (i) {
-	case 0: pwd();
+	case 0: pwd();break;
+	case 1: cd(args);break;
 	default:return 1;
 	}
 
