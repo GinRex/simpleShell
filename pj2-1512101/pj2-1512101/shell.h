@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <direct.h>
+#include <iostream>
+
 
 static int const MAX_LEN = 100;
 #define args_buff_size 6;
@@ -120,11 +122,20 @@ int pwd() {
 	return 1;
 }
 
+wchar_t *convertCharArrayToLPCWSTR(const char* charArray)
+{
+	wchar_t* wString = new wchar_t[4096];
+	MultiByteToWideChar(CP_ACP, 0, charArray, -1, wString, 4096);
+	return wString;
+}
+
 int cd(char**args) {
-	if (system(NULL)) puts("cd Ok");
-	else exit(EXIT_FAILURE);
-	system("cd");
-	
+	if (args[1] != NULL) {
+		LPCWSTR lpPathName = convertCharArrayToLPCWSTR(args[1]);
+		SetCurrentDirectory(lpPathName);
+		printf("success to change directory!\n");
+	}
+	else printf("fail to change directory!\n");
 	return 1;
 }
 
