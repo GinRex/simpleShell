@@ -17,6 +17,8 @@ char**split_line(char *line);
 int shell_execte(char **args);
 int function(int i, char**args);
 
+
+//list of command for user
 char *funct_str[] = {
 	"pwd",
 	"cd",
@@ -35,9 +37,11 @@ int shell_num_funct() {
 	return sizeof(funct_str) / sizeof(char*);
 }
 
+
+////main loop of the program, exit when user use 'exit' ////
 void shell_loop(void) {
-	char *line;
-	char **args;
+	char *line; //command from user
+	char **args; //split command to attributes
 	int stt;
 	//char *crt = new char[100];
 	do {
@@ -51,6 +55,9 @@ void shell_loop(void) {
 		free(args);
 	} while (stt);
 }
+
+
+////support function ////
 
 void clrNewline(char *str) {
 	while (*str != '\0') {
@@ -69,6 +76,14 @@ char* read_line(void) {
 	return line;
 }
 
+wchar_t *convertCharArrayToLPCWSTR(const char* charArray)
+{
+	wchar_t* wString = new wchar_t[4096];
+	MultiByteToWideChar(CP_ACP, 0, charArray, -1, wString, 4096);
+	return wString;
+}
+
+//split command from user to attributes
 char**split_line(char *line) {
 	int pos = 0, buf_size = args_buff_size;
 	char** args = (char**)malloc(buf_size*sizeof(char*));
@@ -100,6 +115,7 @@ char**split_line(char *line) {
 	return args;
 }
 
+//run built-in funtion
 int shell_execte(char **args) {
 	int i;
 
@@ -115,6 +131,9 @@ int shell_execte(char **args) {
 	}
 }
 
+//// BUILT-IN FUNCTIONS ////
+
+//show current working directory
 int pwd() {
 	char *crd = new char[100];
 	crd = _getcwd(NULL, 0);
@@ -122,13 +141,8 @@ int pwd() {
 	return 1;
 }
 
-wchar_t *convertCharArrayToLPCWSTR(const char* charArray)
-{
-	wchar_t* wString = new wchar_t[4096];
-	MultiByteToWideChar(CP_ACP, 0, charArray, -1, wString, 4096);
-	return wString;
-}
 
+//point to chosen directory
 int mCd(char**args) {
 	if (args[1] != NULL) {
 		LPCWSTR lpPathName = convertCharArrayToLPCWSTR(args[1]);
@@ -139,6 +153,7 @@ int mCd(char**args) {
 	return 1;
 }
 
+//copy with : 'copy filePath newFileName' while in destination directory
 int mCopy(char**args) {
 	if (args[1] != NULL && args[2] != NULL) {
 		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
@@ -153,6 +168,7 @@ int mCopy(char**args) {
 	return 1;
 }
 
+//move with : 'move filePath newFileName ' while in destination directory
 int mMove(char**args) {
 	if (args[1] != NULL && args[2] != NULL) {
 		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
@@ -168,6 +184,7 @@ int mMove(char**args) {
 	return 1;
 }
 
+//delete with : 'move filePath'
 int mDel(char**args) {
 	if (args[1] != NULL) {
 		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
@@ -181,6 +198,33 @@ int mDel(char**args) {
 	return 1;
 }
 
+//create new directory with 'mkdir dirPath'
+int mDir(char**args) {
+	if (args[1] != NULL) {
+		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
+		CreateDirectory(lpPathFile, NULL);
+		printf("sucess to make directory!\n");
+	}
+	else {
+		printf("Fail to make directory!\n");
+		return 0;
+	}
+	return 1;
+}
+
+//delete directory with 'del dirPath'
+int mDelDir(char**args) {
+	if (args[1] != NULL) {
+		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
+		RemoveDirectory(lpPathFile);
+		printf("sucess to delete directory!\n");
+	}
+	else {
+		printf("Fail to delete directory!\n");
+		return 0;
+	}
+	return 1;
+}
 
 int function(int i, char**args) {
 	switch (i) {
@@ -189,6 +233,8 @@ int function(int i, char**args) {
 	case 2: mCopy(args);break;
 	case 3: mMove(args);break;
 	case 4: mDel(args);break;
+	case 5: mDir(args);break;
+	case 6: mDelDir(args);break;
 	default:return 1;
 	}
 
