@@ -129,7 +129,7 @@ wchar_t *convertCharArrayToLPCWSTR(const char* charArray)
 	return wString;
 }
 
-int cd(char**args) {
+int mCd(char**args) {
 	if (args[1] != NULL) {
 		LPCWSTR lpPathName = convertCharArrayToLPCWSTR(args[1]);
 		SetCurrentDirectory(lpPathName);
@@ -139,7 +139,7 @@ int cd(char**args) {
 	return 1;
 }
 
-int copy(char**args) {
+int mCopy(char**args) {
 	if (args[1] != NULL && args[2] != NULL) {
 		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
 		LPCWSTR newFileName = convertCharArrayToLPCWSTR(args[2]);
@@ -153,11 +153,42 @@ int copy(char**args) {
 	return 1;
 }
 
+int mMove(char**args) {
+	if (args[1] != NULL && args[2] != NULL) {
+		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
+		LPCWSTR newFileName = convertCharArrayToLPCWSTR(args[2]);
+		MoveFile(lpPathFile, newFileName);
+		//CopyFile(lpPathFile, newFileName, FALSE);
+		printf("sucess to move file!\n");
+	}
+	else {
+		printf("Fail to move file!\n");
+		return 0;
+	}
+	return 1;
+}
+
+int mDel(char**args) {
+	if (args[1] != NULL) {
+		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
+		DeleteFile(lpPathFile);
+		printf("sucess to delete file!\n");
+	}
+	else {
+		printf("Fail to delete file!\n");
+		return 0;
+	}
+	return 1;
+}
+
+
 int function(int i, char**args) {
 	switch (i) {
 	case 0: pwd();break;
-	case 1: cd(args);break;
-	case 2: copy(args);break;
+	case 1: mCd(args);break;
+	case 2: mCopy(args);break;
+	case 3: mMove(args);break;
+	case 4: mDel(args);break;
 	default:return 1;
 	}
 
