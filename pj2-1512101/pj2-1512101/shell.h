@@ -133,9 +133,23 @@ int cd(char**args) {
 	if (args[1] != NULL) {
 		LPCWSTR lpPathName = convertCharArrayToLPCWSTR(args[1]);
 		SetCurrentDirectory(lpPathName);
-		printf("success to change directory!\n");
+		//printf("success to change directory!\n");
 	}
 	else printf("fail to change directory!\n");
+	return 1;
+}
+
+int copy(char**args) {
+	if (args[1] != NULL && args[2] != NULL) {
+		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
+		LPCWSTR newFileName = convertCharArrayToLPCWSTR(args[2]);
+		CopyFile(lpPathFile, newFileName, FALSE);
+		printf("sucess to copy!\n");
+	}
+	else {
+		printf("Fail to copy!\n");
+		return 0;
+	}
 	return 1;
 }
 
@@ -143,6 +157,7 @@ int function(int i, char**args) {
 	switch (i) {
 	case 0: pwd();break;
 	case 1: cd(args);break;
+	case 2: copy(args);break;
 	default:return 1;
 	}
 
