@@ -226,6 +226,31 @@ int mDelDir(char**args) {
 	return 1;
 }
 
+//create new text file
+int mCreateFile(char**args) {
+	if (args[1] != NULL) {
+		FILE* f = fopen(args[1], "wt");
+		printf("success to create file!\n");
+		printf("Type something to file, type '\e' to complete writing.\n ");
+
+		char*text = new char[MAX_LEN];
+		int i = 0;
+		fgets(text, MAX_LEN, stdin);
+		while (*(text + i) != '\0') {
+			i++;
+		}
+		fprintf_s(f, "%s", text);
+		fclose(f);
+		return 1;
+		
+	}
+	else {
+		printf("Fail to create file!\n");
+		return 0;
+	}
+	return 1;
+}
+
 int function(int i, char**args) {
 	switch (i) {
 	case 0: pwd();break;
@@ -235,6 +260,7 @@ int function(int i, char**args) {
 	case 4: mDel(args);break;
 	case 5: mDir(args);break;
 	case 6: mDelDir(args);break;
+	case 7: mCreateFile(args);break;
 	default:return 1;
 	}
 
