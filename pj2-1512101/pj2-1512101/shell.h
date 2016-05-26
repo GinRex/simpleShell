@@ -100,9 +100,9 @@ void joinString(char *str1, char *str2) {
 	int len1 = mStrLen(str1), len2 = mStrLen(str2);
 	int len1new = len1 + len2 + 1;
 	int i = len1;
-	//*(str1 + i) = '';
-	//i++;
-	for (i; i < len1new; i++) {
+	*(str1 + i) = '\\';
+	i++;
+	for (i; i <= len1new; i++) {
 		*(str1 + i) = *str2;
 		str2++;
 	}
@@ -239,9 +239,28 @@ int mCopy(char**args) {
 int mMove(char**args) {
 	if (args[1] != NULL && args[2] != NULL) {
 		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
-		LPCWSTR newFileName = convertCharArrayToLPCWSTR(args[2]);
-		MoveFile(lpPathFile, newFileName);
-		//CopyFile(lpPathFile, newFileName, FALSE);
+		//LPCWSTR newFileSub = convertCharArrayToLPCWSTR(args[2]);
+
+		//move to sub-folder arcording to the args[2]
+		char *crd = new char[100];
+		char *tempt = new char[100];
+		char *name = new char[100];
+		crd = _getcwd(NULL, 0);
+		tempt = _getcwd(NULL, 0); //save the current dir to use later
+		takeName(args[1], name);
+
+		joinString(crd, args[2]);
+		LPCWSTR lpPathName = convertCharArrayToLPCWSTR(crd);
+		LPCWSTR fileName = convertCharArrayToLPCWSTR(name);
+		SetCurrentDirectory(lpPathName);
+
+		MoveFile(lpPathFile, fileName);
+		printf("sucess to move file!\n");
+
+		//set dir to before move
+		LPCWSTR dirname = convertCharArrayToLPCWSTR(tempt);
+		SetCurrentDirectory(dirname);
+		//MoveFile(lpPathFile, fileName);
 		printf("sucess to move file!\n");
 	}
 	else {
