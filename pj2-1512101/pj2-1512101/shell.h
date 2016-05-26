@@ -6,6 +6,9 @@
 #include <tchar.h>
 #include <direct.h>
 #include <iostream>
+#include <io.h>
+#include <wchar.h>
+#include <fcntl.h>
 
 
 static int const MAX_LEN = 100;
@@ -83,6 +86,52 @@ wchar_t *convertCharArrayToLPCWSTR(const char* charArray)
 	return wString;
 }
 
+//support function for string 
+int mStrLen(char *str) {
+	int len = 0;
+	while (*str != '\0') {
+		len++;
+		str++;
+	}
+	return len;
+}
+
+void joinString(char *str1, char *str2) {
+	int len1 = mStrLen(str1), len2 = mStrLen(str2);
+	int len1new = len1 + len2 + 1;
+	int i = len1;
+	//*(str1 + i) = '';
+	//i++;
+	for (i; i < len1new; i++) {
+		*(str1 + i) = *str2;
+		str2++;
+	}
+	*(str1 + len1new) = '\0';
+}
+
+void revString(char*str) {
+	int len = mStrLen(str) - 1;
+	char *tempt = new char[MAX_LEN];
+	//clone the origin string
+	for (int i = 0; i <= len; i++) {
+		*(tempt + i) = *(str + i);
+	}
+
+	for (int i = 0; i <= len; i++) {
+		*(str + i) = *(tempt + len - i);
+	}
+}
+void takeName(char *str, char *name) {
+	int i = mStrLen(str) - 1, n = 0;
+	while (*(str + i) != '\\') {
+		*(name + n) = *(str + i);
+		i--;
+		n++;
+	}
+	*(name + n) = '\0';
+	revString(name);
+}
+
 //split command from user to attributes
 char**split_line(char *line) {
 	int pos = 0, buf_size = args_buff_size;
@@ -153,13 +202,31 @@ int mCd(char**args) {
 	return 1;
 }
 
-//copy with : 'copy filePath newFileName' while in destination directory
+//copy with : 'copy filePath subFoldername' while in destination directory and want to copy to sub folder
 int mCopy(char**args) {
 	if (args[1] != NULL && args[2] != NULL) {
 		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
-		LPCWSTR newFileName = convertCharArrayToLPCWSTR(args[2]);
-		CopyFile(lpPathFile, newFileName, FALSE);
+		//LPCWSTR newFileSub = convertCharArrayToLPCWSTR(args[2]);
+
+		//move to sub-folder arcording to the args[2]
+		char *crd = new char[100];
+		char *tempt = new char[100];
+		char *name = new char[100];
+		crd = _getcwd(NULL, 0);
+		tempt = _getcwd(NULL, 0); //save the current dir to use later
+		takeName(args[1], name);
+
+		joinString(crd, args[2]);
+		LPCWSTR lpPathName = convertCharArrayToLPCWSTR(crd);
+		LPCWSTR fileName = convertCharArrayToLPCWSTR(name);
+		SetCurrentDirectory(lpPathName);
+
+		CopyFile(lpPathFile, fileName, FALSE);
 		printf("sucess to copy!\n");
+
+		//set dir to before copy
+		LPCWSTR dirname = convertCharArrayToLPCWSTR(tempt);
+		SetCurrentDirectory(dirname);
 	}
 	else {
 		printf("Fail to copy!\n");
@@ -229,16 +296,22 @@ int mDelDir(char**args) {
 //create new text file
 int mCreateFile(char**args) {
 	if (args[1] != NULL) {
-		FILE* f = fopen(args[1], "wt");
+		FILE* f = fopen(args[1], "w");
 		printf("success to create file!\n");
 		printf("Type something to file, type '\e' to complete writing.\n ");
 
-		char*text = new char[MAX_LEN];
+		wchar_t* text = new wchar_t[MAX_LEN];
+		char*txt = new char[MAX_LEN];
+		
+		//char*text = new char[MAX_LEN];
 		int i = 0;
-		fgets(text, MAX_LEN, stdin);
+		_setmode(_fileno(stdin), _O_U16TEXT);
+		fgetws(text, MAX_LEN, stdin);
 		while (*(text + i) != '\0') {
 			i++;
 		}
+		wcstombs(txt, text, sizeof(txt));
+		//fwrite(text, sizeof(wchar_t), wcslen(text), f);
 		fprintf_s(f, "%s", text);
 		fclose(f);
 		return 1;
