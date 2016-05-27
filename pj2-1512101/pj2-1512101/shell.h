@@ -235,7 +235,7 @@ int mCopy(char**args) {
 	return 1;
 }
 
-//move with : 'move filePath newFileName ' while in destination directory
+//move with : 'move filePath subFoldername' while in destination directory and want to move to sub folder
 int mMove(char**args) {
 	if (args[1] != NULL && args[2] != NULL) {
 		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
@@ -260,8 +260,6 @@ int mMove(char**args) {
 		//set dir to before move
 		LPCWSTR dirname = convertCharArrayToLPCWSTR(tempt);
 		SetCurrentDirectory(dirname);
-		//MoveFile(lpPathFile, fileName);
-		printf("sucess to move file!\n");
 	}
 	else {
 		printf("Fail to move file!\n");
