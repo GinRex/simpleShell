@@ -121,7 +121,8 @@ void revString(char*str) {
 		*(str + i) = *(tempt + len - i);
 	}
 }
-void takeName(char *str, char *name) {
+void takeNameAndPath(char *str, char *name, char *path) {
+	
 	int i = mStrLen(str) - 1, n = 0;
 	while (*(str + i) != '\\') {
 		*(name + n) = *(str + i);
@@ -130,6 +131,13 @@ void takeName(char *str, char *name) {
 	}
 	*(name + n) = '\0';
 	revString(name);
+
+	if (path != NULL) {
+		for (int j = 0; j < i; j++) {
+			*(path + j) = *(str + j);
+		}
+		*(path + i) = '\0';
+	}
 }
 
 //split command from user to attributes
@@ -214,7 +222,7 @@ int mCopy(char**args) {
 		char *name = new char[100];
 		crd = _getcwd(NULL, 0);
 		tempt = _getcwd(NULL, 0); //save the current dir to use later
-		takeName(args[1], name);
+		takeNameAndPath(args[1], name, NULL);
 
 		joinString(crd, args[2]);
 		LPCWSTR lpPathName = convertCharArrayToLPCWSTR(crd);
@@ -247,7 +255,7 @@ int mMove(char**args) {
 		char *name = new char[100];
 		crd = _getcwd(NULL, 0);
 		tempt = _getcwd(NULL, 0); //save the current dir to use later
-		takeName(args[1], name);
+		takeNameAndPath(args[1], name, NULL);
 
 		joinString(crd, args[2]);
 		LPCWSTR lpPathName = convertCharArrayToLPCWSTR(crd);
@@ -310,7 +318,7 @@ int mDelDir(char**args) {
 	return 1;
 }
 
-//create new text file
+//create new text file by 'createfile filepath\filename'
 int mCreateFile(char**args) {
 	if (args[1] != NULL) {
 		FILE* f = fopen(args[1], "wt, ccs=UTF-8");
@@ -336,6 +344,51 @@ int mCreateFile(char**args) {
 	return 1;
 }
 
+//view text file by 'viewfile filepath\filename'
+int mViewFile(char**args) {
+	if (args[1] != NULL) {
+		//move to sub-folder arcording to the args[2]
+		char *tempt = new char[100];
+		char *name = new char[100];
+		char *path = new char[100];
+
+		//tempt = _getcwd(NULL, 0); //save the current dir to use later
+		takeNameAndPath(args[1], name, path);
+
+		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(path);
+
+		SetCurrentDirectory(lpPathFile);
+
+		//set dir to before copy
+		LPCWSTR dirname = convertCharArrayToLPCWSTR(tempt);
+		SetCurrentDirectory(dirname);
+
+		FILE* f = fopen(name, "rt, ccs=UTF-8");
+		wchar_t* text = new wchar_t[MAX_LEN];
+		int i = 0;
+		if (f == NULL) {
+			return 1;
+		}
+		printf("\n");
+		_setmode(_fileno(stdout), _O_WTEXT);
+		while (fgetws(text, MAX_LEN, f) != NULL) {
+			wprintf(L"%s", text);
+		}
+		_setmode(_fileno(stdout), _O_TEXT);
+		printf("\n");
+		
+		fclose(f);
+
+		return 1;
+
+	}
+	else {
+		printf("Fail to read file!\n");
+		return 0;
+	}
+	return 1;
+}
+
 int function(int i, char**args) {
 	switch (i) {
 	case 0: pwd();break;
@@ -346,6 +399,7 @@ int function(int i, char**args) {
 	case 5: mDir(args);break;
 	case 6: mDelDir(args);break;
 	case 7: mCreateFile(args);break;
+	case 8: mViewFile(args);break;
 	default:return 1;
 	}
 
