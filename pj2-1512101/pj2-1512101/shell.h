@@ -313,23 +313,18 @@ int mDelDir(char**args) {
 //create new text file
 int mCreateFile(char**args) {
 	if (args[1] != NULL) {
-		FILE* f = fopen(args[1], "w");
+		FILE* f = fopen(args[1], "wt, ccs=UTF-8");
 		printf("success to create file!\n");
-		printf("Type something to file, type '\e' to complete writing.\n ");
-
+		printf("Type something to file: ");
 		wchar_t* text = new wchar_t[MAX_LEN];
-		char*txt = new char[MAX_LEN];
-		
-		//char*text = new char[MAX_LEN];
 		int i = 0;
-		_setmode(_fileno(stdin), _O_U16TEXT);
+		_setmode(_fileno(stdin), _O_WTEXT);
 		fgetws(text, MAX_LEN, stdin);
-		while (*(text + i) != '\0') {
+		
+		/*while (*(text + i) != '\0') {
 			i++;
-		}
-		wcstombs(txt, text, sizeof(txt));
-		//fwrite(text, sizeof(wchar_t), wcslen(text), f);
-		fprintf_s(f, "%s", text);
+		}*/
+		fwrite(text, sizeof(wchar_t), wcslen(text) - 1, f);
 		fclose(f);
 		return 1;
 		
