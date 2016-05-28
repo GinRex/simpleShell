@@ -38,10 +38,10 @@ char *funct_str[] = {
 	"exit"
 };
 
-char *funct_edit[] = {
-	"replace"
-	"insert"
-	"close"
+const wchar_t *funct_edit[] = {
+	L"replace",
+	L"insert",
+	L"close"
 };
 
 int shell_num_funct(char *functs[]) {
@@ -101,6 +101,7 @@ wchar_t* wread_line(void) {
 	_setmode(_fileno(stdin), _O_WTEXT);
 	fgetws(line, MAX_LEN, stdin);
 	wclrNewline(line);
+	_setmode(_fileno(stdin), _O_TEXT);
 	return line;
 }
 
@@ -221,7 +222,7 @@ wchar_t *insertWord(wchar_t*wRoot, wchar_t*wIns, int pos) {
 	return strC;
 }
 
-int replaceWord(wchar_t*wRoot, wchar_t*wNew, int pos) {
+int deleteWord(wchar_t*wRoot, int pos) {
 	int len = 0;
 	while (*(wRoot + pos) != ' ') {
 		*(wRoot + pos) = ' ';
@@ -229,7 +230,7 @@ int replaceWord(wchar_t*wRoot, wchar_t*wNew, int pos) {
 		len++;
 	}
 	delDupSpace(wRoot);
-	wRoot = insertWord(wRoot, wNew, pos);
+	//wRoot = insertWord(wRoot, wNew, pos);
 	return 1;
 }
 
@@ -331,41 +332,17 @@ int shell_execte(char **args) {
 }
 
 int edit_execte(wchar_t **args, char **argv) {
-	//int i = 0;
 
 	if (args[0] == NULL) {
 		return 1;
 	}
-	int j = edit_function(1, argv, args);
-	return j;
-
-	/*
-	if (strcmp(funct_edit[0], args[0]) == 0) {
-		int j = edit_function(0, argv);
-		return j;
-	}
-	else if (strcmp(funct_edit[1], args[0]) == 0) {
-		int j = edit_function(1, args);
-		return j;
-	}
-	else if (strcmp(funct_edit[2], args[0]) == 0) {
-		int j = edit_function(2, args);
-		return j;
-	}*/
-
-	/*while (strcmp(funct_edit[i], args[0]) != 0) {
-		i++;
-		if (strcmp(funct_edit[i], args[0]) == 0) {
-			int j = edit_function(i, args);
-			return j;
-		}
-	}
+	
 	for (int i = 0; i <= 2; i++) {
-		if (strcmp(args[0], funct_edit[i]) == 0) {
-			int j = edit_function(i, argv);
+		if (wcscmp(args[0], funct_edit[i]) == 0) {
+			int j = edit_function(i, argv, args);
 			return j;
 		}
-	}*/
+	}
 }
 
 //// BUILT-IN FUNCTIONS ////
@@ -426,7 +403,6 @@ int mCopy(char**args) {
 int mMove(char**args) {
 	if (args[1] != NULL && args[2] != NULL) {
 		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
-		//LPCWSTR newFileSub = convertCharArrayToLPCWSTR(args[2]);
 
 		//move to sub-folder arcording to the args[2]
 		char *crd = new char[100];
@@ -596,8 +572,52 @@ int mEditFile(char**args) {
 	return 1;
 }
 
-int replace(char**args) {
+int replace(char**args, wchar_t**argv) {
+	if (args[1] != NULL) {
+		//move to sub-folder arcording to the args[2]
+		char *tempt = new char[100];
+		char *name = new char[100];
+		char *path = new char[100];
 
+		//tempt = _getcwd(NULL, 0); //save the current dir to use later
+		takeNameAndPath(args[1], name, path);
+
+		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(path);
+
+		SetCurrentDirectory(lpPathFile);
+
+		//set dir to before copy
+		LPCWSTR dirname = convertCharArrayToLPCWSTR(tempt);
+		SetCurrentDirectory(dirname);
+
+		FILE* f = fopen(name, "rt, ccs=UTF-8");
+		wchar_t* text = new wchar_t[MAX_LEN];
+		int i = 0;
+		if (f == NULL) {
+			return 1;
+		}
+		fgetws(text, MAX_LEN, f);
+		fclose(f);
+
+		//change DES and inserted word to wchar_t
+		int pos = findWord(text, argv[1]);
+		deleteWord(text, pos);
+		pos--;
+		wchar_t *rturn = insertWord(text, argv[2], pos);
+
+		FILE* fr = fopen(name, "wt, ccs=UTF-8");
+		printf("success to insert text!\n");
+
+		fwrite(rturn, sizeof(wchar_t), wcslen(rturn), fr);
+		fclose(f);
+
+		return 1;
+	}
+	else {
+		printf("Fail to read file!\n");
+		return 0;
+	}
+	return 1;
 
 	return 1;
 }
@@ -630,28 +650,14 @@ int insertW(char**args, wchar_t**argv) {
 		fclose(f);
 
 		//change DES and inserted word to wchar_t
-		//wchar_t *rpWord = convertCharArrayToLPCWSTR(argv[1]);
-		//wchar_t *instWord = convertCharArrayToLPCWSTR(argv[2]);
 		int pos = findWord(text, argv[1]) + mWStrLen(argv[1]);
 		wchar_t *rturn =  insertWord(text, argv[2], pos);
 		
 		FILE* fr = fopen(name, "wt, ccs=UTF-8");
 		printf("success to insert text!\n");
-		//wchar_t* text = new wchar_t[MAX_LEN];
-		
-		//_setmode(_fileno(stdin), _O_WTEXT);
-		//fgetws(text, MAX_LEN, stdin);
 
-		/*while (*(text + i) != '\0') {
-		i++;
-		}*/
 		fwrite(rturn, sizeof(wchar_t), wcslen(rturn), fr);
 		fclose(f);
-		//char*txt = new char[100];
-
-		//i = wcstombs(txt, text, MAX_LEN);
-		//printf("debug : %s", txt);
-
 
 		return 1;
 	}
@@ -683,9 +689,9 @@ int function(int i, char**args) {
 
 int edit_function(int i, char**args, wchar_t**argv) {
 	switch (i) {
-	case 0:replace(args);break;
+	case 0:replace(args, argv);break;
 	case 1:insertW(args, argv);break;
-	case 2:exit(1);break;
+	case 2:return 0;
 	default:return 1;
 	}
 	return 1;
