@@ -55,6 +55,7 @@ void shell_loop(void) {
 	char **args; //split command to attributes
 	int stt;
 	//char *crt = new char[100];
+	printf("Simple Shell - CMD Clone\n");
 	do {
 		char *crd = new char[100];
 		crd = _getcwd(NULL, 0);
@@ -431,7 +432,7 @@ int mMove(char**args) {
 	return 1;
 }
 
-//delete with : 'move filePath'
+//delete with : 'del filePath'
 int mDel(char**args) {
 	if (args[1] != NULL) {
 		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
@@ -459,13 +460,31 @@ int mDir(char**args) {
 	return 1;
 }
 
-//delete directory with 'del dirPath'
+//delete directory with 'rd dirPath'
 int mDelDir(char**args) {
 	if (args[1] != NULL) {
-		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
-		
-		RemoveDirectory(lpPathFile);
-		printf("sucess to delete directory!\n");
+		WIN32_FIND_DATAA ffd;
+		HANDLE hFind;
+		DWORD Attributes;
+		char str[100];
+		std::string data;
+		strcpy(str, args[1]);
+		strcat(str, "\\*");
+		hFind = FindFirstFileA(str, &ffd);
+		char convert[100];
+		do {
+			data = args[1];
+			data += "\\";
+			data += ffd.cFileName;
+			DeleteFile(convertCharArrayToLPCWSTR(data.c_str()));
+		} while (FindNextFileA(hFind, &ffd) != 0);
+		FindClose(hFind);
+		if (RemoveDirectory(convertCharArrayToLPCWSTR(args[1]))) {
+			printf("sucess to delete directory!\n");
+		}
+		else {
+			printf("fail to delete directory!\n");
+		}
 	}
 	else {
 		printf("Fail to delete directory!\n");
