@@ -503,7 +503,7 @@ int mCreateFile(char**args) {
 		int i = 0;
 		_setmode(_fileno(stdin), _O_WTEXT);
 		fgetws(text, MAX_LEN, stdin);
-		
+		_setmode(_fileno(stdin), _O_TEXT);
 		/*while (*(text + i) != '\0') {
 			i++;
 		}*/
@@ -572,9 +572,12 @@ int mEditFile(char**args) {
 		wchar_t *line; //command from user
 		wchar_t **argv; //split command to attributes
 		int stt;
+		char *name = new char[100];
+		char *path = new char[100];
+		takeNameAndPath(args[1], name, path);
 		do {
 			char *crd = new char[100];
-			printf("EDITFILE> ");
+			printf("%s> ", name);
 			line = wread_line(); //read the command from user
 			argv = wsplit_line(line);
 			stt = edit_execte(argv, args);
