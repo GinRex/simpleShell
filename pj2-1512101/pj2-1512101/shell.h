@@ -21,7 +21,7 @@ int shell_execte(char **args);
 int edit_execte(wchar_t **args, char **argv);
 int function(int i, char**args);
 int edit_function(int i, char**args, wchar_t**argv);
-
+wchar_t *convertCharArrayToLPCWSTR(const char* charArray);
 
 //list of command for user
 char *funct_str[] = {
@@ -54,7 +54,10 @@ void shell_loop(void) {
 	char *line; //command from user
 	char **args; //split command to attributes
 	int stt;
-	//char *crt = new char[100];
+	char *def = new char[MAX_LEN];
+	def = "C:\\";
+	LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(def);
+	SetCurrentDirectory(lpPathFile);
 	printf("Simple Shell - CMD Clone\n");
 	do {
 		char *crd = new char[100];
@@ -225,7 +228,7 @@ wchar_t *insertWord(wchar_t*wRoot, wchar_t*wIns, int pos) {
 
 int deleteWord(wchar_t*wRoot, int pos) {
 	int len = 0;
-	while (*(wRoot + pos) != ' ') {
+	while (*(wRoot + pos) != ' ' && *(wRoot + pos) != '\0') {
 		*(wRoot + pos) = ' ';
 		pos++;
 		len++;
@@ -252,6 +255,13 @@ void takeNameAndPath(char *str, char *name, char *path) {
 		}
 		*(path + i) = '\0';
 	}
+}
+
+int checkDir(char*str) {
+	if (strstr(str, ":\\")) {
+		return 1;
+	}
+	else return 0;
 }
 
 //split command from user to attributes
@@ -372,23 +382,26 @@ int mCd(char**args) {
 int mCopy(char**args) {
 	if (args[1] != NULL && args[2] != NULL) {
 		LPCWSTR lpPathFile = convertCharArrayToLPCWSTR(args[1]);
-
-		//move to sub-folder arcording to the args[2]
 		char *crd = new char[100];
 		char *tempt = new char[100];
 		char *name = new char[100];
-		crd = _getcwd(NULL, 0);
 		tempt = _getcwd(NULL, 0); //save the current dir to use later
 		takeNameAndPath(args[1], name, NULL);
-
-		joinString(crd, args[2]);
-		LPCWSTR lpPathName = convertCharArrayToLPCWSTR(crd);
 		LPCWSTR fileName = convertCharArrayToLPCWSTR(name);
-		SetCurrentDirectory(lpPathName);
-
+		if (checkDir(args[2]) == 1) {
+			//move to sub-folder arcording to the args[2]
+			LPCWSTR lpPathName = convertCharArrayToLPCWSTR(args[2]);
+			SetCurrentDirectory(lpPathName);
+		}
+		else if (checkDir(args[2]) == 0) {
+			//move to sub-folder arcording to the args[2]
+			crd = _getcwd(NULL, 0);
+			joinString(crd, args[2]);
+			LPCWSTR lpPathName = convertCharArrayToLPCWSTR(crd);
+			SetCurrentDirectory(lpPathName);
+		}
 		CopyFile(lpPathFile, fileName, FALSE);
 		printf("sucess to copy!\n");
-
 		//set dir to before copy
 		LPCWSTR dirname = convertCharArrayToLPCWSTR(tempt);
 		SetCurrentDirectory(dirname);
@@ -409,18 +422,22 @@ int mMove(char**args) {
 		char *crd = new char[100];
 		char *tempt = new char[100];
 		char *name = new char[100];
-		crd = _getcwd(NULL, 0);
+
 		tempt = _getcwd(NULL, 0); //save the current dir to use later
 		takeNameAndPath(args[1], name, NULL);
-
-		joinString(crd, args[2]);
-		LPCWSTR lpPathName = convertCharArrayToLPCWSTR(crd);
 		LPCWSTR fileName = convertCharArrayToLPCWSTR(name);
-		SetCurrentDirectory(lpPathName);
-
+		if (checkDir(args[2]) == 1) {
+			LPCWSTR lpPathName = convertCharArrayToLPCWSTR(args[2]);
+			SetCurrentDirectory(lpPathName);
+		}
+		else if (checkDir(args[2]) == 0) {
+			crd = _getcwd(NULL, 0);
+			joinString(crd, args[2]);
+			LPCWSTR lpPathName = convertCharArrayToLPCWSTR(crd);
+			SetCurrentDirectory(lpPathName);
+		}
 		MoveFile(lpPathFile, fileName);
 		printf("sucess to move file!\n");
-
 		//set dir to before move
 		LPCWSTR dirname = convertCharArrayToLPCWSTR(tempt);
 		SetCurrentDirectory(dirname);
